@@ -1,10 +1,19 @@
+'use client'
+import React from "react";
 import Head from "next/head";
 import Link from "next/link";
 import Calendar from "@/components/Calendar";
 
 import { api } from "@/utils/api";
+import type { DateTime } from "@/utils/types";
+import Spinner from "@/components/Spinner";
 
 export default function Home() {
+
+  const [date, setDate] = React.useState<DateTime>({
+    justDate: null,
+    dateTime: null
+  })
 
   return (
     <>
@@ -15,7 +24,10 @@ export default function Home() {
       </Head>
 
       <main>
-        <Calendar />
+        {!date.dateTime && <Calendar setDate={setDate} date={date}/>}
+
+        {date.dateTime && false ? <Menu /> : <div className="flex h-screen items-center justify-center"> <Spinner/> </div>}
+
       </main>
     </>
   );

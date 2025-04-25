@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { getJwtSecretKey } from "../../auth";
 import cookie from "cookie";
 import { TRPCError } from "@trpc/server";
+import { ourFileRouter } from "@/server/uploadthing";
 
 export const adminRouter = createTRPCRouter({
   login: publicProcedure.input(z.object({email: z.string().email(), password: z.string()})).mutation(async ({ ctx, input}) => {
@@ -43,5 +44,46 @@ export const adminRouter = createTRPCRouter({
 
   sensitive: adminProcedure.mutation(() => {
     return 'sensetive'
+  }),
+
+  addMenuItem: adminProcedure
+    .input(
+      z.object({
+        imageUrl: z.string(),
+        imageKey: z.string(),
+        name: z.string(),
+        price: z.number(),
+        categories: z.array(z.enum(['breakfast', 'lunch', 'dinner'])),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { name, price, categories, imageKey } = input;
+      const menuItem = await ctx.prisma.MenuItem.create({
+        data: {
+          name: input.name,
+          price: input.price,
+          categories: input.categories,
+          imageKey: input.imageKey,
+          url: input.imageUrl,
+        },
+      });
+
+      return menuItem;
+    }),
+
+    getMenuItems: adminProcedure.query(async ({ ctx }) => {
+      return ctx.prisma.menuItem.findMany();
+    }),
+
+    deleteMenuItem: adminProcedure
+      .input(z.object({ imageKey: z.string(), id: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        await ctx.prisma.menuItem.delete({ where: { id: input.id } });
+
+        // UploadThing doesn't delete files via API directly yet — optional
+
+        return true;
+      }),
+
+
   })
-})
